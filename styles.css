@@ -11,3 +11,12 @@
 
 .analytics-grid{display:grid;grid-template-columns:1.55fr 1fr;gap:14px;margin:14px 0}.chart-surface{min-width:0}.chart-empty{font-size:10px;color:#a0a8b0;min-height:120px;display:flex;align-items:center;justify-content:center;text-align:center}.trend-svg{width:100%;height:190px;overflow:visible}.trend-label{font:9px 'DM Mono';fill:#9ba3aa}.trend-grid{stroke:#ece9e1;stroke-dasharray:3 4}.trend-line{fill:none;stroke:#5475a8;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}.trend-area{fill:url(#trendFill)}.trend-dot{fill:#fffefa;stroke:#5475a8;stroke-width:2}.free-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:center}.free-metric{background:#f8f6f0;border:1px solid #eee9dd;border-radius:9px;padding:12px}.free-metric small{display:block;font-size:9px;color:#929ba3}.free-metric b{display:block;font:500 22px 'DM Mono';color:#465a72;margin-top:7px}.quality-list{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.quality-item{padding:12px;border-radius:9px;background:#f8f6f0;border:1px solid #eee9dd}.quality-item small{display:block;color:#969fa7;font-size:9px}.quality-item b{display:block;color:#526478;font-size:12px;margin-top:6px}.quality-item.warn{background:#fbf5e9;border-color:#efe2c8}.quality-item.warn b{color:#9b7942}.quality-foot{font-size:9px;color:#9ba2a7;line-height:1.8;margin-top:12px}
 @media(max-width:620px){.analytics-grid{grid-template-columns:1fr}.quality-list{grid-template-columns:1fr 1fr}.trend-svg{height:160px}}
+
+/* Additional historical analytics */
+.rank-list,.compare-list{display:grid;gap:9px}
+.rank-row,.compare-row{display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid #eee9dd;border-radius:10px;background:#fbfaf7}
+.rank-no{width:25px;height:25px;display:grid;place-items:center;border-radius:50%;background:#f0e8d8;color:#9b7942;font:600 11px 'DM Mono';flex:none}
+.rank-main{min-width:0;flex:1}.rank-main b,.compare-row b{display:block;color:#40536a;font-size:12px}.rank-main small,.compare-row small,.rank-value small{display:block;color:#969fa7;font-size:9px;margin-top:4px}
+.rank-value{text-align:right;white-space:nowrap}.rank-value b{font:600 12px 'DM Mono'}
+.compare-row{display:block}.compare-values{display:flex;justify-content:space-between;gap:10px;margin-top:10px;color:#8b969f;font-size:10px}.compare-values b{display:inline;color:#526478;font:600 11px 'DM Mono'}
+@media(max-width:620px){.compare-values{flex-direction:column;gap:5px}.rank-main small{line-height:1.6}}
