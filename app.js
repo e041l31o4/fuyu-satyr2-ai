@@ -21,14 +21,3 @@ function drawAnalytics(){
  }
 }
 
-const drawBase=draw;
-function draw(){drawBase();drawExtra()}
-function drawExtra(){
- const valid=s.records.filter(r=>+r.bet>0&&+r.payout>=0&&Number.isFinite(+r.bet)&&Number.isFinite(+r.payout));
- const days={};valid.forEach(r=>{const d=String(r.date||'').slice(0,10);if(d)days[d]=(days[d]||0)+(+r.payout)-(+r.bet)});
- const keys=Object.keys(days).sort().slice(-14),vals=keys.map(k=>days[k]),el=$('trendChart');
- if(el&&keys.length){const w=600,h=180,l=38,top=12,b=28,lo=Math.min(0,...vals),hi=Math.max(0,...vals),span=hi-lo||1,x=i=>l+(keys.length===1?280:i*(w-l-12)/(keys.length-1)),y=v=>top+(hi-v)/span*(h-top-b),points=vals.map((v,i)=>x(i)+','+y(v)).join(' ');el.innerHTML='<svg class="trend-svg" viewBox="0 0 '+w+' '+h+'"><line x1="'+l+'" x2="'+(w-12)+'" y1="'+y(0)+'" y2="'+y(0)+'" stroke="#e5e1d8" stroke-dasharray="4 4"/><polyline points="'+points+'" fill="none" stroke="#5475a8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>'+vals.map((v,i)=>'<circle cx="'+x(i)+'" cy="'+y(v)+'" r="4" fill="#fffefa" stroke="#5475a8" stroke-width="2"><title>'+keys[i]+'：'+fmt(v)+'</title></circle>').join('')+keys.map((k,i)=>i===0||i===keys.length-1||i%3===0?'<text x="'+x(i)+'" y="'+(h-5)+'" text-anchor="middle" fill="#9ba3aa" font-size="10">'+k.slice(5)+'</text>':'').join('')+'</svg>'}
- const free=valid.filter(r=>r.free==='是').length,fs=$('freeStats');
- if(fs)fs.innerHTML=valid.length?'<div class="free-metric"><small>免遊觸發局數</small><b>'+free+'</b></div><div class="free-metric"><small>紀錄觸發比例</small><b>'+(free/valid.length*100).toFixed(1)+'%</b></div><div class="free-metric"><small>未觸發局數</small><b>'+(valid.length-free)+'</b></div><div class="free-metric"><small>有效樣本</small><b>'+valid.length+'</b></div>':'尚無免遊紀錄';
- const q=$('quality');if(q){const bad=s.records.length-valid.length,dup=s.records.length-new Set(s.records.map(r=>[r.date,r.room,r.bet,r.payout].join('|'))).size,rooms=new Set(valid.map(r=>r.room)).size;q.innerHTML='<div class="quality-item"><small>有效紀錄</small><b>'+valid.length+' 筆</b></div><div class="quality-item"><small>欄位異常</small><b>'+bad+' 筆</b></div><div class="quality-item"><small>疑似重複</small><b>'+dup+' 筆</b></div><div class="quality-item"><small>有紀錄房間</small><b>'+rooms+' 間</b></div><div class="quality-item"><small>樣本狀態</small><b>'+(valid.length<30?'少量樣本':'持續累積中')+'</b></div><div class="quality-item"><small>資料來源</small><b>手動／CSV</b></div><p class="quality-foot">僅作欄位初步檢查，不會自動刪除資料，也不代表已驗證富遊平台來源。請以正式版原始紀錄核對。</p>'}
-}
