@@ -36,10 +36,10 @@ function drawAnalytics(){
  }
  const st=$('streakStats');
  if(st){
-  const ordered=[...records].sort((a,b)=>new Date(a.date)-new Date(b.date)),outcomes=ordered.map(r=>({win:(+r.payout)-(+r.bet)>=0,net:(+r.payout)-(+r.bet)})).filter(x=>x.net!==0);
+  const ordered=[...records].sort((a,b)=>new Date(a.date)-new Date(b.date)),outcomes=ordered.map(r=>({win:(+r.payout)-(+r.bet)>0,net:(+r.payout)-(+r.bet)}));
   let current=0,currentType='',maxWin=0,maxLoss=0,run=0,last='';
-  outcomes.forEach(o=>{const type=o.win?'win':'loss';run=type===last?run+1:1;last=type;if(type==='win')maxWin=Math.max(maxWin,run);else maxLoss=Math.max(maxLoss,run)});
-  if(outcomes.length){currentType=outcomes[outcomes.length-1].win?'win':'loss';for(let i=outcomes.length-1;i>=0&&((outcomes[i].win?'win':'loss')===currentType);i--)current++}
+  outcomes.forEach(o=>{const type=o.net===0?'flat':o.win?'win':'loss';if(type==='flat'){run=0;last='';return}run=type===last?run+1:1;last=type;if(type==='win')maxWin=Math.max(maxWin,run);else maxLoss=Math.max(maxLoss,run)});
+  if(outcomes.length&&outcomes[outcomes.length-1].net!==0){currentType=outcomes[outcomes.length-1].win?'win':'loss';for(let i=outcomes.length-1;i>=0&&outcomes[i].net!==0&&((outcomes[i].win?'win':'loss')===currentType);i--)current++}
   st.innerHTML='<div class="streak-item"><small>目前連續</small><b class="'+(currentType==='win'?'pos':'neg')+'">'+(currentType==='win'?'正損益 ':'負損益 ')+current+' 局</b></div><div class="streak-item"><small>最長連續正損益</small><b>'+maxWin+' 局</b></div><div class="streak-item"><small>最長連續負損益</small><b>'+maxLoss+' 局</b></div><div class="streak-item"><small>納入計算局數</small><b>'+outcomes.length+' 局</b></div><p class="quality-foot">以每局派彩減投注判定正負；打平局不計入連續序列。連續紀錄是回顧統計，不代表下一局走勢。</p>';
  }
 
@@ -48,6 +48,17 @@ function drawAnalytics(){
   const bands=[{name:'凌晨',range:'00:00–05:59',test:h=>h<6},{name:'上午',range:'06:00–11:59',test:h=>h>=6&&h<12},{name:'下午',range:'12:00–17:59',test:h=>h>=12&&h<18},{name:'晚間',range:'18:00–23:59',test:h=>h>=18}];
   const rows=bands.map(b=>{const a=records.filter(r=>{const d=new Date(r.date);return Number.isFinite(d.getTime())&&b.test(d.getHours())}),bet=a.reduce((n,r)=>n+(+r.bet),0),pay=a.reduce((n,r)=>n+(+r.payout),0),wins=a.filter(r=>(+r.payout)-(+r.bet)>0).length,loss=a.filter(r=>(+r.payout)-(+r.bet)<0).length;return{...b,n:a.length,bet,pay,net:pay-bet,rtp:bet?pay/bet*100:null,winRate:a.length?wins/a.length*100:0,loss}}).filter(x=>x.n);
   tp.innerHTML=rows.length?rows.map(v=>'<div class="time-row"><div class="time-label"><b>'+v.name+'</b><small>'+v.range+'</small></div><div class="time-main"><b>'+v.n+' 局</b><small>正損益率 '+v.winRate.toFixed(1)+'% · 樣本 RTP '+(v.rtp===null?'—':v.rtp.toFixed(1)+'%')+'</small></div><div class="time-value"><b class="'+(v.net>=0?'pos':'neg')+'">'+(v.net<0?'−':'＋')+'$'+fmt(Math.abs(v.net))+'</b><small>淨損益</small></div></div>').join(''):'尚無可辨識的時間紀錄';
+ }
+
+ const stability=$('stabilityStats');
+ if(stability){
+  const nets=records.map(r=>(+r.payout)-(+r.bet)),sorted=[...nets].sort((a,b)=>a-b),count=nets.length;
+  const mean=count?nets.reduce((a,b)=>a+b,0)/count:0,median=count?(count%2?sorted[(count-1)/2]:(sorted[count/2-1]+sorted[count/2])/2):0;
+  const variance=count?nets.reduce((a,v)=>a+(v-mean)**2,0)/count:0,sd=Math.sqrt(variance);
+  const positive=nets.filter(v=>v>0).sort((a,b)=>b-a),positiveTotal=positive.reduce((a,b)=>a+b,0),topN=positive.length?Math.max(1,Math.ceil(positive.length*.1)):0,concentration=positiveTotal?positive.slice(0,topN).reduce((a,b)=>a+b,0)/positiveTotal*100:null;
+  const best=count?Math.max(...nets):0,worst=count?Math.min(...nets):0,win=count?nets.filter(v=>v>0).length:0,loss=count?nets.filter(v=>v<0).length:0,flat=count-win-loss;
+  const cells=[['平均單局損益',count?(mean<0?'−':'＋')+'$'+fmt(Math.abs(mean)):'—'],['單局損益中位數',count?(median<0?'−':'＋')+'$'+fmt(Math.abs(median)):'—'],['單局損益標準差',count?'$'+fmt(sd):'—'],['最佳／最差單局',count?'＋$'+fmt(best)+' ／ −$'+fmt(Math.abs(worst)):'—'],['正／負／打平局數',count?win+' ／ '+loss+' ／ '+flat:'—'],['前 10% 獲利局占正損益',concentration===null?'無正損益樣本':concentration.toFixed(1)+'%']];
+  stability.innerHTML=count?cells.map(v=>'<div class="stability-item"><small>'+v[0]+'</small><b>'+v[1]+'</b></div>').join('')+'<p class="quality-foot">標準差以每局「派彩－投注」計算，數值越大代表單局損益波動越大；前 10% 比例只衡量正損益局的集中程度。這些指標是歷史描述，不是預測或獲利評級。</p>':'尚無有效局數紀錄';
  }
 
 }
