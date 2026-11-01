@@ -19,5 +19,16 @@ function drawAnalytics(){
  if(q){const invalid=s.records.length-records.length,dupes=s.records.length-new Set(s.records.map(r=>[r.date,r.room,r.bet,r.payout].join('|'))).size,rooms=new Set(records.map(r=>r.room)).size,notes=[];
  q.innerHTML='<div class="quality-item"><small>有效紀錄</small><b>'+records.length+' / '+s.records.length+' 筆</b></div><div class="quality-item '+(invalid?'warn':'')+'"><small>欄位異常</small><b>'+invalid+' 筆</b></div><div class="quality-item '+(dupes?'warn':'')+'"><small>疑似重複紀錄</small><b>'+dupes+' 筆</b></div><div class="quality-item"><small>有資料房間</small><b>'+rooms+' 間</b></div><div class="quality-item '+(records.length<30?'warn':'')+'"><small>樣本量狀態</small><b>'+(records.length<30?'少量樣本':'已有累積')+'</b></div><div class="quality-item"><small>資料來源</small><b>手動／CSV 匯入</b></div><p class="quality-foot">異常與重複僅依日期、房間、投注及派彩欄位初步檢查，不會自動刪除資料。樣本量提示不是統計顯著性判定。此處不會驗證平台真實性，請自行核對富遊正式版原始紀錄。</p>';
  }
+ const rank=$('roomRanking');
+ if(rank){
+  const rooms=[...new Set(records.map(r=>r.room))].map(room=>{const a=records.filter(r=>r.room===room),bet=a.reduce((n,r)=>n+(+r.bet),0),pay=a.reduce((n,r)=>n+(+r.payout),0);return{room,n:a.length,bet,pay,net:pay-bet,rtp:bet?pay/bet*100:null}}).sort((a,b)=>b.net-a.net);
+  rank.innerHTML=rooms.length?rooms.map((r,i)=>'<div class="rank-row"><span class="rank-no">'+(i+1)+'</span><div class="rank-main"><b>'+safe(r.room)+'</b><small>'+r.n+' 局 · 投注 $'+fmt(r.bet)+' · 派彩 $'+fmt(r.pay)+'</small></div><div class="rank-value"><b class="'+(r.net>=0?'pos':'neg')+'">'+(r.net<0?'−':'＋')+'$'+fmt(Math.abs(r.net))+'</b><small>樣本 RTP '+(r.rtp===null?'—':r.rtp.toFixed(1)+'%')+'</small></div></div>').join(''):'尚無房間紀錄';
+ }
+ const fc=$('freeCompare');
+ if(fc){
+  const groups=[{name:'有觸發免遊',a:records.filter(r=>r.free==='是')},{name:'未觸發免遊',a:records.filter(r=>r.free!=='是')}];
+  fc.innerHTML=groups.map(g=>{const bet=g.a.reduce((n,r)=>n+(+r.bet),0),pay=g.a.reduce((n,r)=>n+(+r.payout),0),net=pay-bet,rtp=bet?pay/bet*100:null;return '<div class="compare-row"><div><b>'+g.name+'</b><small>'+g.a.length+' 局紀錄</small></div><div class="compare-values"><span>淨損益 <b class="'+(net>=0?'pos':'neg')+'">'+(net<0?'−':'＋')+'$'+fmt(Math.abs(net))+'</b></span><span>樣本 RTP <b>'+(rtp===null?'—':rtp.toFixed(1)+'%')+'</b></span></div></div>'}).join('')+'<p class="quality-foot">此比較只描述已登錄局數，不能證明免遊觸發與後續結果存在因果關係。</p>';
+ }
+
 }
 
