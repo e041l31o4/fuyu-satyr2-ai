@@ -22,30 +22,52 @@ function makeRoad(seq){
  return cols;
 }
 function derivedRoad(cols,offset){
- const out=[];
+ // 依大路實際座標逐顆產生副路訊號，再按副路自己的落點規則排盤。
+ const signals=[];
  for(let c=offset+1;c<cols.length;c++){
   const column=cols[c]||[];
-  for(let r=0;r<6;r++){
-   if(!column[r])continue;
-   let same=false;
-   if(r===0){
-    const a=(cols[c-1]||[]).filter(Boolean).length;
-    const b=(cols[c-offset-1]||[]).filter(Boolean).length;
-    same=a===b;
+  for(let row=0;row<6;row++){
+   if(!column[row])continue;
+   let same;
+   if(row===0){
+    const leftA=(cols[c-1]||[]).filter(Boolean).length;
+    const leftB=(cols[c-offset-1]||[]).filter(Boolean).length;
+    same=leftA===leftB;
    }else{
-    same=!!(cols[c-1]||[])[r]===!!(cols[c-offset-1]||[])[r];
+    same=!!(cols[c-1]||[])[row]===!!(cols[c-offset-1]||[])[row];
    }
-   out.push({result:same?'B':'P'});
+   signals.push(same?'B':'P');
   }
  }
- return out;
+ // 副路獨立排盤：同色向下，遇到底部或阻擋則向右；
+ // 轉色時開新欄，若頂格被占用則向右尋找空位。
+ const grid=[],placed=[];let last=null,col=-1,row=0;
+ const occupied=(c,r)=>!!(grid[c]&&grid[c][r]);
+ signals.forEach(color=>{
+  if(color!==last){
+   col=Math.max(0,col+1);row=0;
+   while(occupied(col,row))col++;
+  }else if(row<5&&!occupied(col,row+1)){
+   row++;
+  }else{
+   col++;
+   while(occupied(col,row))col++;
+  }
+  if(!grid[col])grid[col]=[];
+  grid[col][row]={result:color};
+  placed.push({result:color,c:col,r:row});
+  last=color;
+ });
+ return placed;
 }
 function paintRoad(id,items,large=false,preview=false){
  const width=12, cells=Array.from({length:6},()=>Array(width).fill(null));
  if(large){
   items.forEach(x=>{const c=x.c-(Math.max(0,Math.max(...items.map(y=>y.c||0))-width+1));if(c>=0&&c<width)cells[x.r][c]=x});
  }else{
-  items.slice(-width*6).forEach((x,i)=>{const c=Math.floor(i/6),r=i%6;cells[r][c]=x});
+  const maxCol=items.reduce((m,x)=>Math.max(m,x.c||0),0);
+  const shift=Math.max(0,maxCol-width+1);
+  items.forEach(x=>{const c=(x.c||0)-shift;if(c>=0&&c<width&&x.r>=0&&x.r<6)cells[x.r][c]=x});
  }
  const target=$(id);if(!target)return;
  target.innerHTML=cells.map(row=>row.map(x=>'<div class="road-cell">'+(x?'<span class="road-mark '+x.result+(x.preview?' preview-mark':'')+'">'+(large?(x.result==='B'?'莊':'閒'):'')+(x.ties?'<i>'+x.ties+'</i>':'')+'</span>':'')+'</div>').join('')).join('');
