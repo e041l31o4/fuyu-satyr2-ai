@@ -21,18 +21,23 @@ function valid(a){return a.every(x=>rankList.includes(x))}
 function score(a){return a.reduce((n,x)=>n+(x==='A'?1:['10','J','Q','K'].includes(x)?0:+x),0)%10}
 function makeRoad(seq){
  const cols=[];let last=null,col=-1,row=0;
+ const occupied=(c,r)=>!!(cols[c]&&cols[c][r]);
  seq.forEach(result=>{
   if(result==='T'){if(col>=0&&cols[col]&&cols[col][row])cols[col][row].ties=(cols[col][row].ties||0)+1;return}
-  if(result!==last){col++;row=0;if(!cols[col])cols[col]=[]}
-  else if(row<5&&!cols[col][row+1])row++;
-  else{col++;if(!cols[col])cols[col]=[]}
+  if(result!==last){
+   col++;row=0;
+   while(occupied(col,row))col++;
+  }else if(row<5&&!occupied(col,row+1))row++;
+  else{col++;while(occupied(col,row))col++}
+  if(!cols[col])cols[col]=[];
   cols[col][row]={result,ties:0};last=result;
  });
  return cols;
 }
 function derivedRoad(cols,offset){
- // 標準副路：以大路座標比較前方兩欄（或更多欄）的高度／同列有無珠，
- // 產生訊號後，再由副路自己的落點規則排盤。
+ // 依大路逐顆珠子的時間順序產生副路訊號：
+ // 新欄首顆比較前兩個（或指定距離）欄的高度；
+ // 同欄後續珠比較指定列是否同時有珠。
  const signals=[];
  for(let c=offset+1;c<cols.length;c++){
   const column=cols[c]||[];
@@ -46,7 +51,9 @@ function derivedRoad(cols,offset){
    signals.push(same?'B':'P');
   }
  }
- const grid=[],placed=[];let last=null,col=-1,row=0;
+ // 副路排盤：同色向下；不同色向右但保留目前列；
+ // 若下方或目標格被占用，依規則向右尋找空格。
+ const grid=[],placed=[];let last=null,col=0,row=0;
  const occupied=(c,r)=>!!(grid[c]&&grid[c][r]);
  signals.forEach(color=>{
   if(last===null){col=0;row=0}
@@ -54,7 +61,7 @@ function derivedRoad(cols,offset){
    if(row<5&&!occupied(col,row+1))row++;
    else{col++;while(occupied(col,row))col++}
   }else{
-   col++;row=0;while(occupied(col,row))col++;
+   col++;while(occupied(col,row))col++;
   }
   if(!grid[col])grid[col]=[];
   grid[col][row]={result:color};
