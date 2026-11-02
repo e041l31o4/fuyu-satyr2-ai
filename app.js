@@ -2,7 +2,7 @@ const KEY='baccarat-quick-v2';
 let db;
 try{db=JSON.parse(localStorage.getItem(KEY))||{shoes:[{rounds:[]}],active:0}}catch{db={shoes:[{rounds:[]}],active:0}}
 if(!Array.isArray(db.shoes)||!db.shoes.length)db={shoes:[{rounds:[]}],active:0};
-let chosen=null;
+let chosen=null;\nlet forecast=null;
 const $=id=>document.getElementById(id),s=()=>db.shoes[db.active],persist=()=>{localStorage.setItem(KEY,JSON.stringify(db));render()};
 const rankList=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
 document.querySelectorAll('[data-result]').forEach(b=>b.onclick=()=>{chosen=b.dataset.result;document.querySelectorAll('[data-result]').forEach(x=>x.classList.toggle('selected',x===b))});
@@ -39,7 +39,7 @@ function derivedRoad(cols,offset){
  }
  return out;
 }
-function paintRoad(id,items,large=false){
+function paintRoad(id,items,large=false,preview=false){
  const width=12, cells=Array.from({length:6},()=>Array(width).fill(null));
  if(large){
   items.forEach(x=>{const c=x.c-(Math.max(0,Math.max(...items.map(y=>y.c||0))-width+1));if(c>=0&&c<width)cells[x.r][c]=x});
@@ -47,18 +47,18 @@ function paintRoad(id,items,large=false){
   items.slice(-width*6).forEach((x,i)=>{const c=Math.floor(i/6),r=i%6;cells[r][c]=x});
  }
  const target=$(id);if(!target)return;
- target.innerHTML=cells.map(row=>row.map(x=>'<div class="road-cell">'+(x?'<span class="road-mark '+x.result+'">'+(large?(x.result==='B'?'莊':'閒'):'')+(x.ties?'<i>'+x.ties+'</i>':'')+'</span>':'')+'</div>').join('')).join('');
+ target.innerHTML=cells.map(row=>row.map(x=>'<div class="road-cell">'+(x?'<span class="road-mark '+x.result+(x.preview?' preview-mark':'')+'">'+(large?(x.result==='B'?'莊':'閒'):'')+(x.ties?'<i>'+x.ties+'</i>':'')+'</span>':'')+'</div>').join('')).join('');
 }
 function renderRoadBoards(){
- const seq=s().rounds.filter(x=>x.imported).map(x=>x.result),cols=makeRoad(seq),big=[];
- cols.forEach((column,c)=>column.forEach((x,r)=>{if(x)big.push({...x,c,r})}));
- paintRoad('bigRoad',big,true);
- paintRoad('eyeRoad',derivedRoad(cols,1));
- paintRoad('smallRoad',derivedRoad(cols,2));
- paintRoad('roachRoad',derivedRoad(cols,3));
- const status=$('setupStatus');if(status)status.textContent='已輸入 '+seq.length+' 局前段路單；四種路盤已同步更新。';
+ const seq=s().rounds.map(x=>x.result);if(forecast)seq.push(forecast);const cols=makeRoad(seq),big=[];
+ cols.forEach((column,c)=>column.forEach((x,r)=>{if(x)big.push({...x,c,r,preview:!!forecast&&c===cols.length-1&&r===(column.length-1)})}));
+ paintRoad('bigRoad',big,true,!!forecast);
+ paintRoad('eyeRoad',derivedRoad(cols,1).map((x,i)=>({...x,preview:!!forecast&&i===derivedRoad(cols,1).length-1})));
+ paintRoad('smallRoad',derivedRoad(cols,2).map((x,i)=>({...x,preview:!!forecast&&i===derivedRoad(cols,2).length-1})));
+ paintRoad('roachRoad',derivedRoad(cols,3).map((x,i)=>({...x,preview:!!forecast&&i===derivedRoad(cols,3).length-1})));
+ const status=$('setupStatus');if(status)status.textContent='已記錄 '+s().rounds.length+' 局；四種路盤同步更新。';\n const fs=$('forecastStatus');if(fs)fs.textContent=forecast?('預覽中：假設下一局開'+(forecast==='B'?'莊':'閒')+'。閃爍標記為模擬位置，尚未寫入正式紀錄。'):'按下莊問路或閒問路，預覽下一局四種路盤變化；不會寫入正式紀錄。';
 }
-document.querySelectorAll('[data-past]').forEach(b=>b.addEventListener('click',()=>{
+$('askBanker').onclick=()=>{forecast='B';renderRoadBoards()};\n$('askPlayer').onclick=()=>{forecast='P';renderRoadBoards()};\n$('clearForecast').onclick=()=>{forecast=null;renderRoadBoards()};\ndocument.querySelectorAll('[data-past]').forEach(b=>b.addEventListener('click',()=>{
  s().rounds.push({result:b.dataset.past,p:[],b:[],imported:true,at:Date.now()});persist();
 }));
 $('undoRoad').addEventListener('click',()=>{const i=s().rounds.map(x=>x.imported).lastIndexOf(true);if(i>=0){s().rounds.splice(i,1);persist()}});
@@ -72,7 +72,7 @@ function saveRound(){
   const expected=score(b)===score(p)?'T':score(b)>score(p)?'B':'P';
   if(expected!==chosen&&!confirm('依照輸入牌面計算結果為「'+({B:'莊贏',P:'閒贏',T:'和局'}[expected])+'」，但你選的是「'+({B:'莊贏',P:'閒贏',T:'和局'}[chosen])+'」。仍要保存嗎？'))return;
  }
- s().rounds.push({result:chosen,p,b,imported:false,at:Date.now()});
+ s().rounds.push({result:chosen,p,b,imported:false,at:Date.now()});forecast=null;
  $('pCards').value='';$('bCards').value='';chosen=null;
  document.querySelectorAll('[data-result]').forEach(x=>x.classList.remove('selected'));
  $('hint').textContent='已保存本局；已知牌面會從牌組扣除並重新估算。';persist();
