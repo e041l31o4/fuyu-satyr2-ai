@@ -162,6 +162,29 @@ function render(){
  if(sim.error){$('caveat').textContent=sim.error;return}
  const p=sim.probs;
  $('mainPicks').innerHTML=[['莊勝',p.B],['閒勝',p.P],['和局',p.T]].map(([n,v])=>'<div class="pick"><small>'+n+'</small><b>'+pct(v)+'</b><span>牌靴條件模擬估算</span></div>').join('');
+ const big=makeRoad(rounds.map(x=>x.result));
+ const roadSets=[
+  ['大路',big.beads.map(x=>x.result)],
+  ['大眼仔路',derivedRoad(big,1).map(x=>x.result)],
+  ['小路',derivedRoad(big,2).map(x=>x.result)],
+  ['曱甴路',derivedRoad(big,3).map(x=>x.result)]
+ ];
+ const describeRoad=(seq)=>{
+  const tail=seq.slice(-12),recent=tail.slice(-8);
+  if(!tail.length)return {trend:'資料不足',streak:'—',alternate:'—',detail:'累積足夠路珠後才會顯示規律'};
+  let streak=1;for(let j=seq.length-1;j>0&&seq[j]===seq[j-1];j--)streak++;
+  const switches=recent.slice(1).filter((v,j)=>v!==recent[j]).length;
+  const rate=recent.length>1?switches/(recent.length-1):0;
+  const trend=recent.length<4?'樣本偏少':rate>=.75?'交替偏多':rate<=.25?'連續偏多':'混合走勢';
+  const last=seq[seq.length-1];
+  const colorName=last==='B'?'紅': '藍';
+  return {trend,streak:colorName+'色 '+streak+' 顆',alternate:recent.length>1?Math.round(rate*100)+'%':'—',detail:'近'+recent.length+'顆：'+recent.map(v=>v==='B'?'紅':'藍').join(' → ')};
+ };
+ $('roadPatterns').innerHTML=roadSets.map(([name,seq])=>{
+  const d=describeRoad(seq);
+  return '<div class="road-pattern"><b>'+name+'</b><strong>'+d.trend+'</strong><span>目前尾段：'+d.streak+'</span><span>近段轉色率：'+d.alternate+'</span><small>'+d.detail+'</small></div>';
+ }).join('');
+
  const bets=[['閒對',p.pairP,11,'閒家前兩張同點數'],['莊對',p.pairB,11,'莊家前兩張同點數'],['和局',p.T,8,'莊閒最終點數相同']];
  $('sidePicks').innerHTML=bets.map(([name,prob,odds,desc])=>{
   const value=ev(prob,odds),threshold=1/(odds+1),margin=2*Math.sqrt(prob*(1-prob)/16000);
