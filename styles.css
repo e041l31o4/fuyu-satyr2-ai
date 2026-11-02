@@ -48,3 +48,31 @@ textarea{display:block;width:100%;margin-top:7px;border:1px solid var(--line);bo
 .road-forecast-actions button:hover{filter:brightness(.97);transform:translateY(-1px)}
 .road-forecast small{font-size:9px;color:#8794a5;line-height:1.6}
 @media(max-width:650px){.road-forecast-actions button{flex:1;padding:10px 5px}}
+
+
+/* Desktop two-column workspace: road entry on the left, live hand + analysis on the right. */
+@media (min-width: 1100px){
+  .app{
+    max-width: 1480px;
+    padding: 0 28px 28px;
+    display: grid;
+    grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+    column-gap: 22px;
+    align-content: start;
+  }
+  header,.intro,footer{grid-column:1 / -1}
+  .setup{grid-column:1;grid-row:3;align-self:start;margin:0}
+  .entry{grid-column:2;grid-row:3;align-self:start}
+  .analysis{grid-column:2;grid-row:4;margin-top:16px;align-self:start}
+  footer{grid-row:5}
+  .road-entry-layout{grid-template-columns:145px minmax(0,1fr);gap:12px}
+  .road-boards{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  .big-road,.derived-road{
+    grid-template-columns:repeat(12,minmax(7px,1fr));
+    grid-template-rows:repeat(6,23px);
+    min-height:138px;
+  }
+  .road-cell{height:23px;min-width:0}
+  .road-board{padding:8px}
+  .road-forecast{padding:10px}
+}
