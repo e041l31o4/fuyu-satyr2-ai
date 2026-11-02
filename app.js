@@ -1,1 +1,54 @@
-const KEY='baccarat-quick-v2';let db;try{db=JSON.parse(localStorage.getItem(KEY))||{shoes:[{rounds:[]}],active:0}}catch{db={shoes:[{rounds:[]}],active:0}}let chosen=null;const $=id=>document.getElementById(id),s=()=>db.shoes[db.active],persist=()=>{localStorage.setItem(KEY,JSON.stringify(db));render()};document.querySelectorAll('[data-result]').forEach(b=>b.onclick=()=>{chosen=b.dataset.result;document.querySelectorAll('[data-result]').forEach(x=>x.classList.toggle('selected',x===b))});function cards(v){return v.toUpperCase().split(/[ ,，、]+/).filter(Boolean)}function valid(a){return a.every(x=>['A','2','3','4','5','6','7','8','9','10','J','Q','K'].includes(x))}function score(a){return a.reduce((n,x)=>n+(x==='A'?1:['10','J','Q','K'].includes(x)?0:+x),0)%10}function saveRound(){if(!chosen)return alert('請先點選這局是莊贏、閒贏或和局');let p=cards($('pCards').value),b=cards($('bCards').value);if(!valid(p)||!valid(b))return alert('牌面請填 A、2–10、J、Q、K，以空格分開');if((p.length||b.length)&&(!p.length||!b.length||p.length<2||b.length<2||p.length>3||b.length>3))return alert('牌面請輸入閒家及莊家各 2–3 張，或兩邊都留空');s().rounds.push({result:chosen,p,b,at:Date.now()});$('pCards').value='';$('bCards').value='';chosen=null;document.querySelectorAll('[data-result]').forEach(x=>x.classList.remove('selected'));$('hint').textContent='已儲存！下一局分析已更新。';persist()}$('save').onclick=saveRound;function simulate(n=18000){let tally={B:0,P:0,T:0,pairP:0,pairB:0};for(let k=0;k<n;k++){let d=[];for(let r of ['A','2','3','4','5','6','7','8','9','10','J','Q','K'])for(let i=0;i<32;i++)d.push(r);for(let i=d.length-1;i>0;i--){let j=Math.random()*(i+1)|0;[d[i],d[j]]=[d[j],d[i]]}let ix=0,p=[d[ix++],d[ix++]],b=[d[ix++],d[ix++]];if(p[0]===p[1])tally.pairP++;if(b[0]===b[1])tally.pairB++;let pv=score(p),bv=score(b);if(pv<8&&bv<8){let third=null;if(pv<=5){third=d[ix++];p.push(third)}if(p.length===3){let v=third==='A'?1:['10','J','Q','K'].includes(third)?0:+third;if(bv<=2||(bv===3&&v!==8)||(bv===4&&v>=2&&v<=7)||(bv===5&&v>=4&&v<=7)||(bv===6&&(v===6||v===7)))b.push(d[ix++])}else if(bv<=5)b.push(d[ix++])}pv=score(p);bv=score(b);tally[pv===bv?'T':bv>pv?'B':'P']++}return Object.fromEntries(Object.entries(tally).map(([k,v])=>[k,v/n]))}function render(){let r=s().rounds,p=simulate();$('rounds').textContent=r.length;$('shoeInfo').textContent='中途進房・快速紀錄';$('mainPicks').innerHTML=[['莊勝',p.B],['閒勝',p.P],['和局',p.T]].map(([n,v])=>'<div class="pick"><small>'+n+'</small><b>'+ (v*100).toFixed(2)+'%</b><span>標準 8 副牌基準</span></div>').join('');$('sidePicks').innerHTML=[['閒對',p.pairP,'閒家前兩張同點數'],['莊對',p.pairB,'莊家前兩張同點數'],['和局',p.T,'莊閒最終點數相同']].map(([n,v,d])=>'<div class="side-row"><div>'+n+'<small>'+d+'</small></div><b>'+ (v*100).toFixed(2)+'%</b></div>').join('');$('caveat').textContent='中途進房模式：前面牌面未知，因此無法精確推算當前牌靴剩餘牌組。上方是標準 8 副牌隨機模擬基準；你輸入的勝負會保存作路單統計，但不會被錯誤當成已知牌面來改變勝率。';$('recommend').textContent='目前資料不足以判斷下一局莊或閒有真實優勢。和局、對子屬低機率側注，是否值得投注必須再看平台賠率；僅憑前幾局輸贏不能推導下一局。';$('road').innerHTML=r.slice(-60).map(x=>'<span class="dot '+x.result+'">'+({B:'莊',P:'閒',T:'和'}[x.result])+'</span>').join('')||'<span class="hint">還沒有紀錄，輸入第一局開始。</span>';$('historyCount').textContent='本靴共 '+r.length+' 局｜莊 '+r.filter(x=>x.result==='B').length+' 局・閒 '+r.filter(x=>x.result==='P').length+' 局・和 '+r.filter(x=>x.result==='T').length+' 局'}$('clear').onclick=()=>{if(confirm('確定清除目前牌靴紀錄？')){s().rounds=[];persist()}};$('newShoe').onclick=()=>{db.shoes.push({rounds:[]});db.active=db.shoes.length-1;persist()};$('backup').onclick=()=>{let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(db,null,2)],{type:'application/json'}));a.download='baccarat-records.json';a.click();URL.revokeObjectURL(a.href)};render();
+const KEY='baccarat-quick-v2';
+let db;
+try{db=JSON.parse(localStorage.getItem(KEY))||{shoes:[{rounds:[]}],active:0}}catch{db={shoes:[{rounds:[]}],active:0}}
+let chosen=null;
+const $=id=>document.getElementById(id),s=()=>db.shoes[db.active],persist=()=>{localStorage.setItem(KEY,JSON.stringify(db));render()};
+document.querySelectorAll('[data-result]').forEach(b=>b.onclick=()=>{chosen=b.dataset.result;document.querySelectorAll('[data-result]').forEach(x=>x.classList.toggle('selected',x===b))});
+function cards(v){return v.toUpperCase().split(/[ ,，、]+/).filter(Boolean)}
+function valid(a){return a.every(x=>['A','2','3','4','5','6','7','8','9','10','J','Q','K'].includes(x))}
+function score(a){return a.reduce((n,x)=>n+(x==='A'?1:['10','J','Q','K'].includes(x)?0:+x),0)%10}
+function saveRound(){
+ if(!chosen)return alert('請先點選這局是莊贏、閒贏或和局');
+ let p=cards($('pCards').value),b=cards($('bCards').value);
+ if(!valid(p)||!valid(b))return alert('牌面請填 A、2–10、J、Q、K，以空格分開');
+ if((p.length||b.length)&&(!p.length||!b.length||p.length<2||b.length<2||p.length>3||b.length>3))return alert('牌面請輸入閒家及莊家各 2–3 張，或兩邊都留空');
+ s().rounds.push({result:chosen,p,b,at:Date.now()});
+ $('pCards').value='';$('bCards').value='';chosen=null;
+ document.querySelectorAll('[data-result]').forEach(x=>x.classList.remove('selected'));
+ $('hint').textContent='已儲存！下一局分析已更新。';persist();
+}
+$('save').onclick=saveRound;
+function simulate(n=30000){
+ let tally={B:0,P:0,T:0,pairP:0,pairB:0};
+ for(let k=0;k<n;k++){
+  let d=[];for(let r of ['A','2','3','4','5','6','7','8','9','10','J','Q','K'])for(let i=0;i<32;i++)d.push(r);
+  for(let i=d.length-1;i>0;i--){let j=Math.random()*(i+1)|0;[d[i],d[j]]=[d[j],d[i]]}
+  let ix=0,p=[d[ix++],d[ix++]],b=[d[ix++],d[ix++]];
+  if(p[0]===p[1])tally.pairP++;if(b[0]===b[1])tally.pairB++;
+  let pv=score(p),bv=score(b);
+  if(pv<8&&bv<8){
+   let third=null;
+   if(pv<=5){third=d[ix++];p.push(third)}
+   if(p.length===3){let v=third==='A'?1:['10','J','Q','K'].includes(third)?0:+third;if(bv<=2||(bv===3&&v!==8)||(bv===4&&v>=2&&v<=7)||(bv===5&&v>=4&&v<=7)||(bv===6&&(v===6||v===7)))b.push(d[ix++])}
+   else if(bv<=5)b.push(d[ix++]);
+  }
+  pv=score(p);bv=score(b);tally[pv===bv?'T':bv>pv?'B':'P']++;
+ }
+ return Object.fromEntries(Object.entries(tally).map(([k,v])=>[k,v/n]));
+}
+function evText(prob,netOdds){let ev=prob*netOdds-(1-prob);return {ev,label:(ev*100).toFixed(2)+'%',positive:ev>0}}
+function render(){
+ let r=s().rounds,p=simulate();
+ $('rounds').textContent=r.length;$('shoeInfo').textContent='中途進房・快速紀錄';
+ $('mainPicks').innerHTML=[['莊勝',p.B],['閒勝',p.P],['和局',p.T]].map(([n,v])=>'<div class="pick"><small>'+n+'</small><b>'+(v*100).toFixed(2)+'%</b><span>標準 8 副牌基準</span></div>').join('');
+ const bets=[['閒對',p.pairP,'閒家前兩張同點數',11],['莊對',p.pairB,'莊家前兩張同點數',11],['和局',p.T,'莊閒最終點數相同',8]];
+ $('sidePicks').innerHTML=bets.map(([n,v,d,o])=>{let e=evText(v,o);return '<div class="side-row"><div>'+n+'<small>'+d+'｜賠 '+o+':1</small></div><div style="text-align:right"><b>'+(v*100).toFixed(2)+'%</b><small>基準期望值 '+e.label+'</small><strong style="display:block;color:'+(e.positive?'#16845b':'#b4534b')+'">'+(e.positive?'觸發訊號':'暫不下注')+'</strong></div></div>'}).join('');
+ $('caveat').textContent='中途進房模式：前面牌面未知，不能精確推算剩餘牌組。以下使用標準 8 副牌模擬基準；路單輸贏不會被誤當成已知牌面扣牌。賠率按對子淨賠 11:1、和局淨賠 8:1 計算（不含本金）。';
+ $('recommend').textContent='目前莊對、閒對、和局均未達正期望值條件，因此顯示「暫不下注」。只有在完整牌面資料足以估算剩餘牌組，且依平台實際賠率計算後期望值大於 0，才應觸發下注提示。單靠連莊、跳莊或過去輸贏，不構成可驗證的下注優勢。';
+ $('road').innerHTML=r.slice(-60).map(x=>'<span class="dot '+x.result+'">'+({B:'莊',P:'閒',T:'和'}[x.result])+'</span>').join('')||'<span class="hint">還沒有紀錄，輸入第一局開始。</span>';
+ $('historyCount').textContent='本靴共 '+r.length+' 局｜莊 '+r.filter(x=>x.result==='B').length+' 局・閒 '+r.filter(x=>x.result==='P').length+' 局・和 '+r.filter(x=>x.result==='T').length+' 局';
+}
+$('clear').onclick=()=>{if(confirm('確定清除目前牌靴紀錄？')){s().rounds=[];persist()}};
+$('newShoe').onclick=()=>{db.shoes.push({rounds:[]});db.active=db.shoes.length-1;persist()};
+$('backup').onclick=()=>{let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(db,null,2)],{type:'application/json'}));a.download='baccarat-records.json';a.click();URL.revokeObjectURL(a.href)};
+render();
