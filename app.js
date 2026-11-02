@@ -80,8 +80,8 @@ function render(){
  $('mainPicks').innerHTML=[['莊勝',p.B],['閒勝',p.P],['和局',p.T]].map(([n,v])=>'<div class="pick"><small>'+n+'</small><b>'+pct(v)+'</b><span>牌靴條件模擬估算</span></div>').join('');
  const bets=[['閒對',p.pairP,11,'閒家前兩張同點數'],['莊對',p.pairB,11,'莊家前兩張同點數'],['和局',p.T,8,'莊閒最終點數相同']];
  $('sidePicks').innerHTML=bets.map(([name,prob,odds,desc])=>{
-  const value=ev(prob,odds),threshold=1/(odds+1),signal=value>0;
-  return '<div class="side-row"><div><b>'+name+'</b><small>'+desc+'｜賠 '+odds+':1｜損益平衡 '+pct(threshold)+'</small></div><div class="signal-detail"><b>'+pct(prob)+'</b><small>期望值 '+(value>=0?'+':'')+pct(value)+'</small><strong class="'+(signal?'signal-on':'signal-off')+'">'+(signal?'模型正期望值訊號':'暫不下注')+'</strong></div></div>';
+  const value=ev(prob,odds),threshold=1/(odds+1),margin=2*Math.sqrt(prob*(1-prob)/16000),signal=(prob-margin)>threshold;
+  return '<div class="side-row"><div><b>'+name+'</b><small>'+desc+'｜賠 '+odds+':1｜損益平衡 '+pct(threshold)+'</small></div><div class="signal-detail"><b>'+pct(prob)+'</b><small>期望值 '+(value>=0?'+':'')+pct(value)+'｜保守下界 '+pct(Math.max(0,prob-margin))+'</small><strong class="'+(signal?'signal-on':'signal-off')+'">'+(signal?'模型正期望值訊號':'暫不下注')+'</strong></div></div>';
  }).join('');
  const hasRoad=sim.prior>0,hasKnown=sim.knownN>0;
  $('caveat').textContent='目前已知並扣除 '+sim.knownN+' 張進房後牌面。進房前 '+sim.prior+' 局只有結果、沒有牌面；模型以每局平均約 4.8 張作隨機未知牌抽離估算，並非實際扣牌紀錄。牌路本身不會被當成下一局必然趨勢。';
