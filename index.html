@@ -1,14 +1,17 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f5f7fb"><title>BACCARAT AI｜快速牌局分析</title><link rel="stylesheet" href="styles.css"></head><body><main class="app">
-<header><div class="brand"><span class="logo">B</span><div><b>BACCARAT AI</b><small>快速紀錄・下一局分析</small></div></div><div class="head-actions"><span id="shoeInfo">中途進房模式</span><button id="backup">備份</button></div></header>
-<section class="intro"><div><span class="eyebrow">QUICK TABLE MODE</span><h1>記錄這局，分析下一局。</h1><p>只要填當局牌面及莊／閒／和結果，系統自動保存並更新分析。</p></div><div class="counter"><small>本靴已記錄</small><b id="rounds">0</b><small>局</small></div></section>
-<section class="entry card"><div class="step"><span>01</span><div><b>輸入剛結束的這一局</b><small>不知道牌面可留空，只記結果也可以</small></div></div>
-<div class="inputs"><label>閒家牌面 <input id="pCards" placeholder="例：A 7 3"></label><label>莊家牌面 <input id="bCards" placeholder="例：K 6"></label></div>
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f5f7fb"><title>BACCARAT AI｜牌靴追蹤與分析</title><link rel="stylesheet" href="styles.css"></head><body><main class="app">
+<header><div class="brand"><span class="logo">B</span><div><b>BACCARAT AI</b><small>牌靴追蹤・機率與下注分析</small></div></div><div class="head-actions"><span id="shoeInfo">中途進房模式</span><button id="backup">備份</button></div></header>
+<section class="intro"><div><span class="eyebrow">SHOE TRACKING MODE</span><h1>先補路單，再追蹤每張牌。</h1><p>進房前只輸入莊閒和；進房後開始記錄實際牌面，逐步更新牌靴估算。</p></div><div class="counter"><small>本靴已記錄</small><b id="rounds">0</b><small>局</small></div></section>
+<section class="card setup"><div class="step"><span>01</span><div><b>中途進房｜補上之前的結果</b><small>只輸入莊、閒、和順序即可，不需要前面牌面</small></div></div>
+<label class="wide-label">之前已開出的結果 <textarea id="pastRoad" rows="3" placeholder="例如：莊莊閒莊閒和閒莊&#10;也可用 B B P B P T P B"></textarea></label>
+<div class="setup-actions"><button id="loadRoad" class="save">載入前段路單</button><span id="setupStatus" class="hint">只補路單，不會把未知牌面當成已知牌扣除。</span></div></section>
+<section class="entry card"><div class="step"><span>02</span><div><b>記錄剛結束的這一局</b><small>閒家、莊家分開輸入；依實際發牌順序，第三格就是補牌，沒補牌留空</small></div></div>
+<div class="inputs"><label>閒家牌面（第1張 第2張 第3張補牌）<input id="pCards" placeholder="例：A 7 3"></label><label>莊家牌面（第1張 第2張 第3張補牌）<input id="bCards" placeholder="例：K 6"></label></div>
 <div class="result-label">這局結果</div><div class="results"><button data-result="B" class="banker">莊贏</button><button data-result="P" class="player">閒贏</button><button data-result="T" class="tie">和局</button></div>
-<button id="save" class="save">紀錄本局，分析下一局 <span>→</span></button><div class="hint" id="hint">先選擇莊、閒或和；牌面可以不填。</div></section>
-<section class="analysis"><div class="analysis-head"><div><span class="eyebrow">02 / NEXT ROUND</span><h2>下一局分析</h2></div><span class="live">已更新</span></div><div class="caveat" id="caveat">中途進房：前面未知牌面不會被當成已知牌扣除。以下先提供標準牌靴機率基準，不代表已掌握當前牌靴優勢。</div>
+<button id="save" class="save">紀錄本局牌面，分析下一局 <span>→</span></button><div class="hint" id="hint">牌面請依發牌順序輸入，例如 A 7 3；第三張代表補牌。</div></section>
+<section class="analysis"><div class="analysis-head"><div><span class="eyebrow">03 / NEXT ROUND</span><h2>下一局分析與下注訊號</h2></div><span class="live">持續更新</span></div><div class="caveat" id="caveat">中途進房前未知牌面仍無法還原。只有你進房後逐張輸入的牌，才會從模型牌組中扣除。</div>
 <div class="main-picks" id="mainPicks"></div>
-<div class="side-picks"><div class="side-title">和局、對子投注參考</div><div id="sidePicks"></div></div>
+<div class="side-picks"><div class="side-title">對子／和局觸發判斷（賠率：對子 11:1｜和局 8:1）</div><div id="sidePicks"></div></div>
 <div class="recommend" id="recommend"></div></section>
-<section class="history card"><div class="history-head"><div><b>最近紀錄</b><small>本靴結果</small></div><button id="clear">清除本靴</button></div><div id="road" class="road"></div><div id="historyCount" class="history-count"></div></section>
+<section class="history card"><div class="history-head"><div><b>本靴路單</b><small>中途進房路單＋進房後紀錄</small></div><button id="clear">清除本靴</button></div><div id="road" class="road"></div><div id="historyCount" class="history-count"></div></section>
 <footer><button id="newShoe">＋ 開始新牌靴</button><span>資料保存在此瀏覽器，請定期備份。</span></footer>
 </main><script src="app.js"></script></body></html>
