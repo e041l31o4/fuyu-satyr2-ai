@@ -9,19 +9,50 @@ document.querySelectorAll('[data-result]').forEach(b=>b.onclick=()=>{chosen=b.da
 function cards(v){return v.toUpperCase().split(/[ ,，、]+/).filter(Boolean)}
 function valid(a){return a.every(x=>rankList.includes(x))}
 function score(a){return a.reduce((n,x)=>n+(x==='A'?1:['10','J','Q','K'].includes(x)?0:+x),0)%10}
-function parseRoad(v){
- const map={'莊':'B','庄':'B','B':'B','閒':'P','闲':'P','P':'P','和':'T','T':'T'};
- return [...v.toUpperCase()].filter(ch=>!/[\s,，、|;；\\/]/.test(ch)).map(ch=>map[ch]).filter(Boolean);
+function makeRoad(seq){
+ const cols=[];let last=null,col=-1,row=0;
+ seq.forEach(result=>{
+  if(result==='T'){if(col>=0&&cols[col]?.[row])cols[col][row].ties=(cols[col][row].ties||0)+1;return}
+  if(result!==last){col++;while(cols[col])col++;row=0;cols[col]=[]}
+  else if(row<5&&!cols[col][row+1])row++;
+  else{let next=col+1;while(cols[next]?.[row])next++;col=next;if(!cols[col])cols[col]=[]}
+  if(!cols[col])cols[col]=[];
+  cols[col][row]={result,ties:0};last=result;
+ });
+ return cols;
 }
-$('loadRoad').onclick=()=>{
- const raw=$('pastRoad').value.trim(),seq=parseRoad(raw);
- if(!raw||!seq.length)return alert('請輸入之前開出的莊、閒、和結果，例如：莊莊閒莊閒和');
- if(seq.length!==[...raw.toUpperCase()].filter(ch=>!/[\s,，、|;；\\/]/.test(ch)).length)return alert('路單含有無法辨識的字元，請只輸入莊、閒、和或 B、P、T。');
- const old=s().rounds.filter(x=>!x.imported);
- s().rounds=[...seq.map(result=>({result,p:[],b:[],imported:true,at:Date.now()})),...old];
- $('setupStatus').textContent='已載入 '+seq.length+' 局前段路單；未知牌面不會假裝成已知牌。';
- $('pastRoad').value='';persist();
-};
+function derivedRoad(cols,offset){
+ const out=[];
+ for(let c=offset+1;c<cols.length;c++){
+  for(let r=0;r<6;r++){
+   if(!cols[c]?.[r])continue;
+   let same;
+   if(r===0){same=cols[c-1].length===cols[c-1].filter(Boolean).length&&cols[c-1].length===cols[c-1].filter(Boolean).length;const l1=cols[c-1].filter(Boolean).length,l2=cols[c-1-offset-1]?.filter(Boolean).length||0;same=l1===l2}
+   else same=!!cols[c-1]?.[r]===!!cols[c-1-offset-1]?.[r];
+   out.push({result:same?'B':'P'});
+  }
+ }
+ return out;
+}
+function paintRoad(id,items,large=false){
+ const width=large?Math.max(12,Math.min(24,items.length?Math.max(...items.map(x=>x.c||0))+1:12)):Math.max(12,Math.min(24,Math.ceil(items.length/6)));
+ const cells=Array.from({length:6},()=>Array(width).fill(null));
+ if(large){items.forEach(x=>{if(x.c<width)cells[x.r][x.c]=x})}
+ else items.slice(-width*6).forEach((x,i)=>{const c=Math.floor(i/6),r=i%6;cells[r][c]=x});
+ $(id).innerHTML=cells.map(row=>row.map(x=>'<div class="road-cell">'+(x?'<span class="road-mark '+x.result+'">'+(large?(x.result==='B'?'莊':'閒'):'')+(x.ties?'<i>'+x.ties+'</i>':'')+'</span>':'')+'</div>').join('')).join('');
+}
+function renderRoadBoards(){
+ const seq=s().rounds.filter(x=>x.imported).map(x=>x.result),cols=makeRoad(seq),big=[];
+ cols.forEach((column,c)=>column.forEach((x,r)=>{if(x)big.push({...x,c,r})}));
+ paintRoad('bigRoad',big,true);
+ paintRoad('eyeRoad',derivedRoad(cols,1));
+ paintRoad('smallRoad',derivedRoad(cols,2));
+ paintRoad('roachRoad',derivedRoad(cols,3));
+ $('setupStatus').textContent='已輸入 '+seq.length+' 局前段路單；四種路盤已同步更新。';
+}
+document.querySelectorAll('[data-past]').forEach(b=>b.onclick=()=>{s().rounds.push({result:b.dataset.past,p:[],b:[],imported:true,at:Date.now()});persist()});
+$('undoRoad').onclick=()=>{const i=s().rounds.map(x=>x.imported).lastIndexOf(true);if(i>=0){s().rounds.splice(i,1);persist()}};
+$('clearRoad').onclick=()=>{if(confirm('確定清空已輸入的前段路單？')){s().rounds=s().rounds.filter(x=>!x.imported);persist()}};
 function saveRound(){
  if(!chosen)return alert('請先點選這局是莊贏、閒贏或和局');
  let p=cards($('pCards').value),b=cards($('bCards').value);
@@ -74,7 +105,6 @@ function render(){
  const rounds=s().rounds,sim=simulate(),r=rounds;
  $('rounds').textContent=r.length;$('shoeInfo').textContent='中途進房＋已知牌追蹤';
  $('road').innerHTML=r.slice(-100).map(x=>'<span class="dot '+x.result+'">'+({B:'莊',P:'閒',T:'和'}[x.result])+'</span>').join('')||'<span class="hint">尚未建立路單。</span>';
- $('historyCount').textContent='本靴共 '+r.length+' 局｜莊 '+r.filter(x=>x.result==='B').length+' 局・閒 '+r.filter(x=>x.result==='P').length+' 局・和 '+r.filter(x=>x.result==='T').length+' 局｜已知牌面 '+(sim.knownN||0)+' 張';
  if(sim.error){$('caveat').textContent=sim.error;return}
  const p=sim.probs;
  $('mainPicks').innerHTML=[['莊勝',p.B],['閒勝',p.P],['和局',p.T]].map(([n,v])=>'<div class="pick"><small>'+n+'</small><b>'+pct(v)+'</b><span>牌靴條件模擬估算</span></div>').join('');
