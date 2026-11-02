@@ -46,31 +46,34 @@ function makeRoad(seq){
 }
 function derivedRoad(big,offset){
  const {cols,beads}=big,signals=[];
- // 必須依「實際開出的先後順序」逐顆轉換；不能按欄、按列重新排序，
- // 因為大路觸底後會在右側同列續排，欄內座標不等於時間順序。
  beads.forEach(bead=>{
   const c=bead.c,r=bead.r;
-  if(c<offset+1)return;
-  const near=cols[c-1]||[];
-  const far=cols[c-offset-1]||[];
-  const same=r===0
-   ? near.filter(Boolean).length===far.filter(Boolean).length
-   : !!near[r]===!!far[r];
+  // 副路起算：眼路可從大路第2欄第2顆開始；
+  // 小路第3欄第2顆開始；曱甴路第4欄第2顆開始。
+  if(c<offset||(c===offset&&r===0))return;
+  let same;
+  if(r===0){
+   // 新欄首顆：比較前一欄與隔 offset 欄的欄高。
+   const near=cols[c-1]||[],far=cols[c-offset-1]||[];
+   same=near.filter(Boolean).length===far.filter(Boolean).length;
+  }else{
+   // 同欄續珠：以距離 offset 的左方格，和該格正上方比較。
+   // 兩格同為有珠或同為空格＝紅；一有一空＝藍。
+   const compareCol=cols[c-offset]||[];
+   same=!!compareCol[r]===!!compareCol[r-1];
+  }
   signals.push(same?'B':'P');
  });
- // 副路本身按訊號順序排珠：同色向下；變色從下一欄頂端開始；
- // 若同色到底，則向右保持原列，避開已占格。
+ // 副路訊號自身依大路產生先後順序排盤。
  const grid=[],placed=[];let last=null,col=-1,row=0;
  const occupied=(x,y)=>!!(grid[x]&&grid[x][y]);
  signals.forEach(color=>{
   if(last===null){col=0;row=0}
-  else if(color!==last){
-   col++;row=0;
-   while(occupied(col,row))col++;
-  }else if(row<5&&!occupied(col,row+1))row++;
-  else{
-   col++;
-   while(occupied(col,row))col++;
+  else if(color===last){
+   if(row<5&&!occupied(col,row+1))row++;
+   else{col++;while(occupied(col,row))col++}
+  }else{
+   col++;row=0;while(occupied(col,row))col++;
   }
   if(!grid[col])grid[col]=[];
   grid[col][row]={result:color};
