@@ -8,6 +8,17 @@ const $=id=>document.getElementById(id),s=()=>db.shoes[db.active],persist=()=>{l
 const rankList=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
 document.querySelectorAll('[data-result]').forEach(b=>b.onclick=()=>{chosen=b.dataset.result;document.querySelectorAll('[data-result]').forEach(x=>x.classList.toggle('selected',x===b))});
 function cards(v){return v.toUpperCase().split(/[ ,，、]+/).filter(Boolean)}
+document.querySelectorAll('[data-rank-target]').forEach(pad=>{
+ const input=$(pad.dataset.rankTarget);
+ pad.querySelectorAll('[data-rank]').forEach(btn=>btn.addEventListener('click',()=>{
+  const values=cards(input.value);
+  if(values.length>=3){$('hint').textContent='每位玩家最多輸入三張牌；若已輸入兩張且沒有補牌，請直接保留兩張。';return}
+  input.value=(input.value.trim()?input.value.trim()+' ':'')+btn.dataset.rank;
+  input.dispatchEvent(new Event('input',{bubbles:true}));
+  input.focus();
+ }));
+});
+
 function valid(a){return a.every(x=>rankList.includes(x))}
 function score(a){return a.reduce((n,x)=>n+(x==='A'?1:['10','J','Q','K'].includes(x)?0:+x),0)%10}
 function makeRoad(seq){
