@@ -20,48 +20,57 @@ document.querySelectorAll('[data-rank-target]').forEach(pad=>{
 function valid(a){return a.every(x=>rankList.includes(x))}
 function score(a){return a.reduce((n,x)=>n+(x==='A'?1:['10','J','Q','K'].includes(x)?0:+x),0)%10}
 function makeRoad(seq){
- const cols=[];let last=null,col=-1,row=0;
- const occupied=(c,r)=>!!(cols[c]&&cols[c][r]);
+ const cols=[],beads=[];let last=null,col=-1,row=0;
+ const occupied=(x,y)=>!!(cols[x]&&cols[x][y]);
  seq.forEach(result=>{
-  if(result==='T'){if(col>=0&&cols[col]&&cols[col][row])cols[col][row].ties=(cols[col][row].ties||0)+1;return}
+  if(result==='T'){
+   const current=beads[beads.length-1];
+   if(current){const cell=cols[current.c][current.r];cell.ties=(cell.ties||0)+1}
+   return;
+  }
   if(result!==last){
    col++;row=0;
    while(occupied(col,row))col++;
   }else if(row<5&&!occupied(col,row+1))row++;
-  else{col++;while(occupied(col,row))col++}
-  if(!cols[col])cols[col]=[];
-  cols[col][row]={result,ties:0};last=result;
- });
- return cols;
-}
-function derivedRoad(cols,offset){
- // 依大路逐顆珠子的時間順序產生副路訊號：
- // 新欄首顆比較前兩個（或指定距離）欄的高度；
- // 同欄後續珠比較指定列是否同時有珠。
- const signals=[];
- for(let c=offset+1;c<cols.length;c++){
-  const column=cols[c]||[];
-  for(let row=0;row<6;row++){
-   if(!column[row])continue;
-   const near=cols[c-1]||[];
-   const far=cols[c-offset-1]||[];
-   const same=row===0
-    ? near.filter(Boolean).length===far.filter(Boolean).length
-    : !!near[row]===!!far[row];
-   signals.push(same?'B':'P');
+  else{
+   col++;
+   while(occupied(col,row))col++;
   }
- }
- // 副路排盤：同色向下；不同色向右但保留目前列；
- // 若下方或目標格被占用，依規則向右尋找空格。
- const grid=[],placed=[];let last=null,col=0,row=0;
- const occupied=(c,r)=>!!(grid[c]&&grid[c][r]);
+  if(!cols[col])cols[col]=[];
+  const bead={result,c:col,r:row,ties:0};
+  cols[col][row]=bead;
+  beads.push(bead);
+  last=result;
+ });
+ return {cols,beads};
+}
+function derivedRoad(big,offset){
+ const {cols,beads}=big,signals=[];
+ // 必須依「實際開出的先後順序」逐顆轉換；不能按欄、按列重新排序，
+ // 因為大路觸底後會在右側同列續排，欄內座標不等於時間順序。
+ beads.forEach(bead=>{
+  const c=bead.c,r=bead.r;
+  if(c<offset+1)return;
+  const near=cols[c-1]||[];
+  const far=cols[c-offset-1]||[];
+  const same=r===0
+   ? near.filter(Boolean).length===far.filter(Boolean).length
+   : !!near[r]===!!far[r];
+  signals.push(same?'B':'P');
+ });
+ // 副路本身按訊號順序排珠：同色向下；變色從下一欄頂端開始；
+ // 若同色到底，則向右保持原列，避開已占格。
+ const grid=[],placed=[];let last=null,col=-1,row=0;
+ const occupied=(x,y)=>!!(grid[x]&&grid[x][y]);
  signals.forEach(color=>{
   if(last===null){col=0;row=0}
-  else if(color===last){
-   if(row<5&&!occupied(col,row+1))row++;
-   else{col++;while(occupied(col,row))col++}
-  }else{
-   col++;while(occupied(col,row))col++;
+  else if(color!==last){
+   col++;row=0;
+   while(occupied(col,row))col++;
+  }else if(row<5&&!occupied(col,row+1))row++;
+  else{
+   col++;
+   while(occupied(col,row))col++;
   }
   if(!grid[col])grid[col]=[];
   grid[col][row]={result:color};
@@ -79,11 +88,11 @@ function paintRoad(id,items,large=false){
 }
 function renderRoadBoards(){
  const seq=s().rounds.map(x=>x.result);if(forecast)seq.push(forecast);
- const cols=makeRoad(seq),big=[];
- cols.forEach((column,c)=>column.forEach((x,r)=>{if(x)big.push({...x,c,r,preview:!!forecast&&c===cols.length-1&&r===(column.length-1)})}));
- paintRoad('bigRoad',big,true);
+ const big=makeRoad(seq),cols=big.cols;
+ const lastBead=big.beads[big.beads.length-1];
+ paintRoad('bigRoad',big.beads.map(x=>({...x,preview:!!forecast&&x===lastBead})),true);
  [['eyeRoad',1],['smallRoad',2],['roachRoad',3]].forEach(([id,offset])=>{
-  const road=derivedRoad(cols,offset),last=road.length-1;
+  const road=derivedRoad(big,offset),last=road.length-1;
   paintRoad(id,road.map((x,i)=>({...x,preview:!!forecast&&i===last})));
  });
  const status=$('setupStatus');if(status)status.textContent='已記錄 '+s().rounds.length+' 局；四種路盤同步更新。';
