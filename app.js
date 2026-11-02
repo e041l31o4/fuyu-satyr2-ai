@@ -133,7 +133,7 @@ function render(){
  const confidence=hasKnown?(sim.knownN>=80?'中（進房後已知牌較多，但仍有未知前段牌）':'低（仍有大量未知牌面）'):(hasRoad?'低（只有前段結果，尚無已知牌面）':'低（尚未輸入牌面）');
  $('recommend').textContent='訊號依據：牌面扣除後的模擬機率，與賠率損益平衡點比較；期望值＝命中機率 × 淨賠率 − 未命中機率。資料可信度：'+confidence+'。中途進房前的實際發牌張數與點數未知，故這是近似估算，不是精確牌靴計數；即使顯示正期望值，也不保證下一局命中。';
 }
-$('clear').onclick=()=>{if(confirm('確定清除目前牌靴紀錄？')){s().rounds=[];persist()}};
+$('clearAllRoad').addEventListener('click',()=>{if(confirm('確定清空本靴全部紀錄？包含前段路單、實際牌面與所有格盤資料。此操作無法復原。')){s().rounds=[];forecast=null;chosen=null;persist();$('pCards').value='';$('bCards').value='';document.querySelectorAll('[data-result]').forEach(x=>x.classList.remove('selected'));$('hint').textContent='本靴全部紀錄已清空。';}});
 $('newShoe').onclick=()=>{db.shoes.push({rounds:[]});db.active=db.shoes.length-1;persist()};
 $('backup').onclick=()=>{let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(db,null,2)],{type:'application/json'}));a.download='baccarat-records.json';a.click();URL.revokeObjectURL(a.href)};
 render();
