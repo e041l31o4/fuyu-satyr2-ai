@@ -116,10 +116,17 @@ function saveRound(){
  $('hint').textContent='已保存本局；已知牌面會從牌組扣除並重新估算。';persist();
 }
 $('save').onclick=saveRound;
-function shuffle(a){for(let i=a.length-1;i>0;i--){let j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a}
+function seededRandom(seedText){
+ let h=2166136261;
+ for(let i=0;i<seedText.length;i++){h^=seedText.charCodeAt(i);h=Math.imul(h,16777619)}
+ return function(){h+=0x6D2B79F5;let t=h;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296};
+}
+function shuffle(a,random){for(let i=a.length-1;i>0;i--){let j=random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a}
 function simulate(n=16000){
  const rounds=s().rounds,known=rounds.filter(x=>!x.imported&&x.p?.length&&x.b?.length);
  const prior=rounds.filter(x=>x.imported||!x.p?.length||!x.b?.length).length;
+ // 以本靴實際紀錄建立固定種子；資料不變時，每次模擬結果完全一致。
+ const random=seededRandom(JSON.stringify(rounds.map(x=>({result:x.result,p:x.p||[],b:x.b||[],imported:!!x.imported}))));
  const counts=Object.fromEntries(rankList.map(x=>[x,32]));
  let knownN=0;
  known.forEach(x=>[...x.p,...x.b].forEach(c=>{counts[c]--;knownN++}));
@@ -130,9 +137,9 @@ function simulate(n=16000){
  // 舊路單只用來估計未知已發牌張數；每局按平均約 4.8 張隨機抽離，不能視為真實牌面。
  const hiddenN=Math.min(deck.length-6,Math.round(prior*4.8));
  for(let k=0;k<n;k++){
-  const d=deck.slice();shuffle(d);
+  const d=deck.slice();shuffle(d,random);
   // 模擬中途進房前未知牌已隨機離開牌靴
-  for(let i=0;i<hiddenN;i++){const j=Math.random()*(d.length-i)|0;[d[j],d[d.length-1-i]]=[d[d.length-1-i],d[j]]}
+  for(let i=0;i<hiddenN;i++){const j=random()*(d.length-i)|0;[d[j],d[d.length-1-i]]=[d[d.length-1-i],d[j]]}
   const rem=d.slice(0,d.length-hiddenN);let ix=0;
   const p=[rem[ix++],rem[ix++]],b=[rem[ix++],rem[ix++]];
   if(p[0]===p[1])tally.pairP++;if(b[0]===b[1])tally.pairB++;
