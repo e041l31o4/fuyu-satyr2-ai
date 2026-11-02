@@ -104,7 +104,7 @@ function pct(v){return (v*100).toFixed(2)+'%'}
 function render(){
  const rounds=s().rounds,sim=simulate(),r=rounds;
  $('rounds').textContent=r.length;$('shoeInfo').textContent='中途進房＋已知牌追蹤';
- $('road').innerHTML=r.slice(-100).map(x=>'<span class="dot '+x.result+'">'+({B:'莊',P:'閒',T:'和'}[x.result])+'</span>').join('')||'<span class="hint">尚未建立路單。</span>';
+ renderRoadBoards();
  if(sim.error){$('caveat').textContent=sim.error;return}
  const p=sim.probs;
  $('mainPicks').innerHTML=[['莊勝',p.B],['閒勝',p.P],['和局',p.T]].map(([n,v])=>'<div class="pick"><small>'+n+'</small><b>'+pct(v)+'</b><span>牌靴條件模擬估算</span></div>').join('');
