@@ -1,9 +1,8 @@
 <!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f5f7fb"><title>BACCARAT AI｜牌靴追蹤與分析</title><link rel="stylesheet" href="styles.css"></head><body><main class="app">
 <header><div class="brand"><span class="logo">B</span><div><b>BACCARAT AI</b><small>牌靴追蹤・機率與下注分析</small></div></div><div class="head-actions"><span id="shoeInfo">中途進房模式</span><button id="backup">備份</button></div></header>
 <section class="intro"><div><span class="eyebrow">SHOE TRACKING MODE</span><h1>先補路單，再追蹤每張牌。</h1><p>進房前只輸入莊閒和；進房後開始記錄實際牌面，逐步更新牌靴估算。</p></div><div class="counter"><small>本靴已記錄</small><b id="rounds">0</b><small>局</small></div></section>
-<section class="card setup"><div class="step"><span>01</span><div><b>中途進房｜補上之前的結果</b><small>只輸入莊、閒、和順序即可，不需要前面牌面</small></div></div>
-<label class="wide-label">之前已開出的結果 <textarea id="pastRoad" rows="3" placeholder="例如：莊莊閒莊閒和閒莊&#10;也可用 B B P B P T P B"></textarea></label>
-<div class="setup-actions"><button id="loadRoad" class="save">載入前段路單</button><span id="setupStatus" class="hint">只補路單，不會把未知牌面當成已知牌扣除。</span></div></section>
+<section class="card setup"><div class="step"><span>01</span><div><b>中途進房｜按鈕補上之前的路單</b><small>依照開獎順序點選莊、閒、和，四種路盤即時更新</small></div></div>
+<div class="road-entry-layout"><div class="road-entry-controls"><div class="road-entry-title">選擇上一局結果</div><div class="road-entry-buttons"><button type="button" data-past="B" class="banker">莊</button><button type="button" data-past="P" class="player">閒</button><button type="button" data-past="T" class="tie">和</button></div><div class="road-entry-actions"><button type="button" id="undoRoad">↶ 復原</button><button type="button" id="clearRoad">清空路單</button></div><div id="setupStatus" class="hint">已輸入 0 局。點選按鈕即可建立路單。</div></div><div class="road-boards"><div class="road-board"><b>大路</b><div id="bigRoad" class="big-road"></div></div><div class="road-board"><b>大眼仔路</b><div id="eyeRoad" class="derived-road"></div></div><div class="road-board"><b>小路</b><div id="smallRoad" class="derived-road"></div></div><div class="road-board"><b>曱甴路</b><div id="roachRoad" class="derived-road"></div></div></div></div></section>
 <section class="entry card"><div class="step"><span>02</span><div><b>記錄剛結束的這一局</b><small>閒家、莊家分開輸入；依實際發牌順序，第三格就是補牌，沒補牌留空</small></div></div>
 <div class="inputs"><label>閒家牌面（第1張 第2張 第3張補牌）<input id="pCards" placeholder="例：A 7 3"></label><label>莊家牌面（第1張 第2張 第3張補牌）<input id="bCards" placeholder="例：K 6"></label></div>
 <div class="result-label">這局結果</div><div class="results"><button data-result="B" class="banker">莊贏</button><button data-result="P" class="player">閒贏</button><button data-result="T" class="tie">和局</button></div>
@@ -12,6 +11,6 @@
 <div class="main-picks" id="mainPicks"></div>
 <div class="side-picks"><div class="side-title">對子／和局觸發判斷（賠率：對子 11:1｜和局 8:1）</div><div id="sidePicks"></div></div>
 <div class="recommend" id="recommend"></div></section>
-<section class="history card"><div class="history-head"><div><b>本靴路單</b><small>中途進房路單＋進房後紀錄</small></div><button id="clear">清除本靴</button></div><div id="road" class="road"></div><div id="historyCount" class="history-count"></div></section>
+
 <footer><button id="newShoe">＋ 開始新牌靴</button><span>資料保存在此瀏覽器，請定期備份。</span></footer>
 </main><script src="app.js"></script></body></html>
