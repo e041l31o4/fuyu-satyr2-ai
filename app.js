@@ -40,7 +40,7 @@ $('save').onclick=saveRound;
 function shuffle(a){for(let i=a.length-1;i>0;i--){let j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a}
 function simulate(n=16000){
  const rounds=s().rounds,known=rounds.filter(x=>!x.imported&&x.p?.length&&x.b?.length);
- const prior=rounds.filter(x=>x.imported).length;
+ const prior=rounds.filter(x=>x.imported||!x.p?.length||!x.b?.length).length;
  const counts=Object.fromEntries(rankList.map(x=>[x,32]));
  let knownN=0;
  known.forEach(x=>[...x.p,...x.b].forEach(c=>{counts[c]--;knownN++}));
