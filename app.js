@@ -2,7 +2,8 @@ const KEY='baccarat-quick-v2';
 let db;
 try{db=JSON.parse(localStorage.getItem(KEY))||{shoes:[{rounds:[]}],active:0}}catch{db={shoes:[{rounds:[]}],active:0}}
 if(!Array.isArray(db.shoes)||!db.shoes.length)db={shoes:[{rounds:[]}],active:0};
-let chosen=null;\nlet forecast=null;
+let chosen=null;
+let forecast=null;
 const $=id=>document.getElementById(id),s=()=>db.shoes[db.active],persist=()=>{localStorage.setItem(KEY,JSON.stringify(db));render()};
 const rankList=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
 document.querySelectorAll('[data-result]').forEach(b=>b.onclick=()=>{chosen=b.dataset.result;document.querySelectorAll('[data-result]').forEach(x=>x.classList.toggle('selected',x===b))});
@@ -56,9 +57,13 @@ function renderRoadBoards(){
  paintRoad('eyeRoad',derivedRoad(cols,1).map((x,i)=>({...x,preview:!!forecast&&i===derivedRoad(cols,1).length-1})));
  paintRoad('smallRoad',derivedRoad(cols,2).map((x,i)=>({...x,preview:!!forecast&&i===derivedRoad(cols,2).length-1})));
  paintRoad('roachRoad',derivedRoad(cols,3).map((x,i)=>({...x,preview:!!forecast&&i===derivedRoad(cols,3).length-1})));
- const status=$('setupStatus');if(status)status.textContent='已記錄 '+s().rounds.length+' 局；四種路盤同步更新。';\n const fs=$('forecastStatus');if(fs)fs.textContent=forecast?('預覽中：假設下一局開'+(forecast==='B'?'莊':'閒')+'。閃爍標記為模擬位置，尚未寫入正式紀錄。'):'按下莊問路或閒問路，預覽下一局四種路盤變化；不會寫入正式紀錄。';
+ const status=$('setupStatus');if(status)status.textContent='已記錄 '+s().rounds.length+' 局；四種路盤同步更新。';
+ const fs=$('forecastStatus');if(fs)fs.textContent=forecast?('預覽中：假設下一局開'+(forecast==='B'?'莊':'閒')+'。閃爍標記為模擬位置，尚未寫入正式紀錄。'):'按下莊問路或閒問路，預覽下一局四種路盤變化；不會寫入正式紀錄。';
 }
-$('askBanker').onclick=()=>{forecast='B';renderRoadBoards()};\n$('askPlayer').onclick=()=>{forecast='P';renderRoadBoards()};\n$('clearForecast').onclick=()=>{forecast=null;renderRoadBoards()};\ndocument.querySelectorAll('[data-past]').forEach(b=>b.addEventListener('click',()=>{
+$('askBanker').onclick=()=>{forecast='B';renderRoadBoards()};
+$('askPlayer').onclick=()=>{forecast='P';renderRoadBoards()};
+$('clearForecast').onclick=()=>{forecast=null;renderRoadBoards()};
+document.querySelectorAll('[data-past]').forEach(b=>b.addEventListener('click',()=>{
  s().rounds.push({result:b.dataset.past,p:[],b:[],imported:true,at:Date.now()});persist();
 }));
 $('undoRoad').addEventListener('click',()=>{const i=s().rounds.map(x=>x.imported).lastIndexOf(true);if(i>=0){s().rounds.splice(i,1);persist()}});
