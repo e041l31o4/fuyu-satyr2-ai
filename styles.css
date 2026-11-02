@@ -124,3 +124,12 @@ textarea{display:block;width:100%;margin-top:7px;border:1px solid var(--line);bo
   .road-entry-actions{display:grid;grid-template-columns:1fr;gap:7px}
   .road-entry-actions button{width:100%;min-height:34px}
 }
+
+
+/* Compact card-rank keypad beneath each player input. */
+.rank-pad{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-top:7px}
+.rank-pad button{min-width:0;height:27px;padding:0 2px;border:1px solid #e1e7ef;border-radius:6px;background:#f8fafc;color:#53657b;font:600 10px 'DM Mono',monospace;cursor:pointer}
+.rank-pad button:hover{background:#edf3fa;border-color:#bdcde0}
+.rank-pad button:active{transform:scale(.96)}
+.rank-hint{display:block;margin-top:5px;color:#9aa5b2;font-size:9px}
+@media(max-width:650px){.rank-pad{grid-template-columns:repeat(7,minmax(0,1fr))}.rank-pad button{height:30px}}
