@@ -31,3 +31,20 @@ textarea{display:block;width:100%;margin-top:7px;border:1px solid var(--line);bo
 .big-road,.derived-road{border-radius:5px;grid-template-rows:repeat(6,27px)}
 .road-cell{height:27px;background:#fff}
 @media(max-width:650px){.road-entry-layout{grid-template-columns:1fr}.road-entry-controls{padding:13px}.road-entry-buttons button{height:64px}.road-boards{grid-template-columns:1fr 1fr}.road-board{padding:8px}.big-road,.derived-road{grid-template-columns:repeat(12,22px);grid-template-rows:repeat(6,25px)}.road-cell{height:25px}}
+
+/* Accurate baccarat road symbols and next-round what-if preview */
+.derived-road .road-mark{width:13px;height:13px;border:1.7px solid currentColor;background:transparent}
+#smallRoad .road-mark{width:12px;height:12px;border:0;background:currentColor}
+#roachRoad .road-mark{width:auto;height:auto;border:0;background:transparent;border-radius:0;font-size:0}
+#roachRoad .road-mark::before{content:"／";font-family:Arial,sans-serif;font-size:17px;font-weight:900;line-height:1;color:currentColor}
+.road-mark.preview-mark{animation:roadPulse .8s ease-in-out infinite alternate;box-shadow:0 0 0 3px #f3c96980}
+@keyframes roadPulse{from{opacity:.35;transform:scale(.85)}to{opacity:1;transform:scale(1.2)}}
+.road-forecast{grid-column:1/-1;padding:12px 14px;border:1px solid #e8edf3;background:#f8fafc;border-radius:11px}
+.road-forecast>b{font-size:11px;color:#52647a}
+.road-forecast-actions{display:flex;gap:8px;margin:9px 0}
+.road-forecast-actions button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:10px 18px;font:700 12px 'Noto Sans TC';cursor:pointer}
+.road-forecast-actions .banker{color:#c34e59;border-color:#f0d7da;background:#fff6f7}
+.road-forecast-actions .player{color:#3973b5;border-color:#d9e5f4;background:#f3f7ff}
+.road-forecast-actions button:hover{filter:brightness(.97);transform:translateY(-1px)}
+.road-forecast small{font-size:9px;color:#8794a5;line-height:1.6}
+@media(max-width:650px){.road-forecast-actions button{flex:1;padding:10px 5px}}
