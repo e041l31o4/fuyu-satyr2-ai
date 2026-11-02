@@ -11,12 +11,12 @@ function valid(a){return a.every(x=>rankList.includes(x))}
 function score(a){return a.reduce((n,x)=>n+(x==='A'?1:['10','J','Q','K'].includes(x)?0:+x),0)%10}
 function parseRoad(v){
  const map={'莊':'B','庄':'B','B':'B','閒':'P','闲':'P','P':'P','和':'T','T':'T'};
- return [...v.toUpperCase()].filter(ch=>!/[\s,，、|/;；]/.test(ch)).map(ch=>map[ch]).filter(Boolean);
+ return [...v.toUpperCase()].filter(ch=>!/[\s,，、|;；\\/]/.test(ch)).map(ch=>map[ch]).filter(Boolean);
 }
 $('loadRoad').onclick=()=>{
  const raw=$('pastRoad').value.trim(),seq=parseRoad(raw);
  if(!raw||!seq.length)return alert('請輸入之前開出的莊、閒、和結果，例如：莊莊閒莊閒和');
- if(seq.length!==[...raw.toUpperCase()].filter(ch=>!/[\s,，、|/;；]/.test(ch)).length)return alert('路單含有無法辨識的字元，請只輸入莊、閒、和或 B、P、T。');
+ if(seq.length!==[...raw.toUpperCase()].filter(ch=>!/[\s,，、|;；\\/]/.test(ch)).length)return alert('路單含有無法辨識的字元，請只輸入莊、閒、和或 B、P、T。');
  const old=s().rounds.filter(x=>!x.imported);
  s().rounds=[...seq.map(result=>({result,p:[],b:[],imported:true,at:Date.now()})),...old];
  $('setupStatus').textContent='已載入 '+seq.length+' 局前段路單；未知牌面不會假裝成已知牌。';
