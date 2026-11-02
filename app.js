@@ -12,11 +12,10 @@ function score(a){return a.reduce((n,x)=>n+(x==='A'?1:['10','J','Q','K'].include
 function makeRoad(seq){
  const cols=[];let last=null,col=-1,row=0;
  seq.forEach(result=>{
-  if(result==='T'){if(col>=0&&cols[col]?.[row])cols[col][row].ties=(cols[col][row].ties||0)+1;return}
-  if(result!==last){col++;while(cols[col])col++;row=0;cols[col]=[]}
+  if(result==='T'){if(col>=0&&cols[col]&&cols[col][row])cols[col][row].ties=(cols[col][row].ties||0)+1;return}
+  if(result!==last){col++;row=0;if(!cols[col])cols[col]=[]}
   else if(row<5&&!cols[col][row+1])row++;
-  else{let next=col+1;while(cols[next]?.[row])next++;col=next;if(!cols[col])cols[col]=[]}
-  if(!cols[col])cols[col]=[];
+  else{col++;if(!cols[col])cols[col]=[]}
   cols[col][row]={result,ties:0};last=result;
  });
  return cols;
@@ -24,22 +23,31 @@ function makeRoad(seq){
 function derivedRoad(cols,offset){
  const out=[];
  for(let c=offset+1;c<cols.length;c++){
+  const column=cols[c]||[];
   for(let r=0;r<6;r++){
-   if(!cols[c]?.[r])continue;
-   let same;
-   if(r===0){same=cols[c-1].length===cols[c-1].filter(Boolean).length&&cols[c-1].length===cols[c-1].filter(Boolean).length;const l1=cols[c-1].filter(Boolean).length,l2=cols[c-1-offset-1]?.filter(Boolean).length||0;same=l1===l2}
-   else same=!!cols[c-1]?.[r]===!!cols[c-1-offset-1]?.[r];
+   if(!column[r])continue;
+   let same=false;
+   if(r===0){
+    const a=(cols[c-1]||[]).filter(Boolean).length;
+    const b=(cols[c-offset-1]||[]).filter(Boolean).length;
+    same=a===b;
+   }else{
+    same=!!(cols[c-1]||[])[r]===!!(cols[c-offset-1]||[])[r];
+   }
    out.push({result:same?'B':'P'});
   }
  }
  return out;
 }
 function paintRoad(id,items,large=false){
- const width=large?Math.max(12,Math.min(24,items.length?Math.max(...items.map(x=>x.c||0))+1:12)):Math.max(12,Math.min(24,Math.ceil(items.length/6)));
- const cells=Array.from({length:6},()=>Array(width).fill(null));
- if(large){items.forEach(x=>{if(x.c<width)cells[x.r][x.c]=x})}
- else items.slice(-width*6).forEach((x,i)=>{const c=Math.floor(i/6),r=i%6;cells[r][c]=x});
- $(id).innerHTML=cells.map(row=>row.map(x=>'<div class="road-cell">'+(x?'<span class="road-mark '+x.result+'">'+(large?(x.result==='B'?'莊':'閒'):'')+(x.ties?'<i>'+x.ties+'</i>':'')+'</span>':'')+'</div>').join('')).join('');
+ const width=12, cells=Array.from({length:6},()=>Array(width).fill(null));
+ if(large){
+  items.forEach(x=>{const c=x.c-(Math.max(0,Math.max(...items.map(y=>y.c||0))-width+1));if(c>=0&&c<width)cells[x.r][c]=x});
+ }else{
+  items.slice(-width*6).forEach((x,i)=>{const c=Math.floor(i/6),r=i%6;cells[r][c]=x});
+ }
+ const target=$(id);if(!target)return;
+ target.innerHTML=cells.map(row=>row.map(x=>'<div class="road-cell">'+(x?'<span class="road-mark '+x.result+'">'+(large?(x.result==='B'?'莊':'閒'):'')+(x.ties?'<i>'+x.ties+'</i>':'')+'</span>':'')+'</div>').join('')).join('');
 }
 function renderRoadBoards(){
  const seq=s().rounds.filter(x=>x.imported).map(x=>x.result),cols=makeRoad(seq),big=[];
@@ -48,11 +56,13 @@ function renderRoadBoards(){
  paintRoad('eyeRoad',derivedRoad(cols,1));
  paintRoad('smallRoad',derivedRoad(cols,2));
  paintRoad('roachRoad',derivedRoad(cols,3));
- $('setupStatus').textContent='已輸入 '+seq.length+' 局前段路單；四種路盤已同步更新。';
+ const status=$('setupStatus');if(status)status.textContent='已輸入 '+seq.length+' 局前段路單；四種路盤已同步更新。';
 }
-document.querySelectorAll('[data-past]').forEach(b=>b.onclick=()=>{s().rounds.push({result:b.dataset.past,p:[],b:[],imported:true,at:Date.now()});persist()});
-$('undoRoad').onclick=()=>{const i=s().rounds.map(x=>x.imported).lastIndexOf(true);if(i>=0){s().rounds.splice(i,1);persist()}};
-$('clearRoad').onclick=()=>{if(confirm('確定清空已輸入的前段路單？')){s().rounds=s().rounds.filter(x=>!x.imported);persist()}};
+document.querySelectorAll('[data-past]').forEach(b=>b.addEventListener('click',()=>{
+ s().rounds.push({result:b.dataset.past,p:[],b:[],imported:true,at:Date.now()});persist();
+}));
+$('undoRoad').addEventListener('click',()=>{const i=s().rounds.map(x=>x.imported).lastIndexOf(true);if(i>=0){s().rounds.splice(i,1);persist()}});
+$('clearRoad').addEventListener('click',()=>{if(confirm('確定清空已輸入的前段路單？')){s().rounds=s().rounds.filter(x=>!x.imported);persist()}});
 function saveRound(){
  if(!chosen)return alert('請先點選這局是莊贏、閒贏或和局');
  let p=cards($('pCards').value),b=cards($('bCards').value);
